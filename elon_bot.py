@@ -22,9 +22,6 @@ def send(msg):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     requests.post(url, data={"chat_id": CHAT_ID, "text": msg})
 
-# ✅ TEST MESSAGE (to confirm bot works)
-send("✅ Bot started successfully")
-
 def count_today():
     try:
         with open("tweets.txt", "r") as f:
@@ -42,43 +39,36 @@ def count_today():
     except:
         return 0
 
+last_tweet_time = None
+
 while True:
     print("Checking tweets...")
 
-    feed = None
+    try:
+        feed = None
 
-    # 🔁 Try multiple sources
-    for url in URLS:
-        temp_feed = feedparser.parse(url)
-        if temp_feed.entries:
-            feed = temp_feed
-            print(f"Using: {url}")
-            break
+        for url in URLS:
+            temp_feed = feedparser.parse(url)
+            if temp_feed.entries:
+                feed = temp_feed
+                break
 
-    # ❌ If all fail → retry
-    if feed is None or not feed.entries:
-        print("❌ All sources failed")
-        time.sleep(60)
-        continue
+        if not feed or not feed.entries:
+            print("❌ All sources failed")
+            time.sleep(120)
+            continue
 
-    print("Entries:", len(feed.entries))
+        latest = feed.entries[0]
+        tweet_time = datetime(*latest.published_parsed[:6])
 
-    latest = feed.entries[0]
-    tweet_time = datetime(*latest.published_parsed[:6])
+        if last_tweet_time is None:
+            last_tweet_time = tweet_time
 
-    # 🧠 FIRST RUN
-    if last_tweet_time is None:
-        last_tweet_time = tweet_time
+        elif tweet_time > last_tweet_time:
+            send("🚀 Elon Musk tweeted!")
+            last_tweet_time = tweet_time
 
-    # 🚀 NEW TWEET DETECTED
-    elif tweet_time > last_tweet_time:
-        today_count = count_today()
+    except Exception as e:
+        print("Error:", e)
 
-        send(f"🚀 Elon Musk tweeted!\n📊 Tweets today: {today_count}")
-
-        with open("tweets.txt", "a") as f:
-            f.write(str(tweet_time) + "\n")
-
-        last_tweet_time = tweet_time
-
-    time.sleep(120)
+    time.sleep(60)
