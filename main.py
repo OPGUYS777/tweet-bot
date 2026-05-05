@@ -47,9 +47,4 @@ def main():
 
     if not tweets:
         send("⚠️ Failed to fetch tweets (RSS issue)")
-        return
 
-    analyze(tweets)
-
-if __name__ == "__main__":
-    main()
