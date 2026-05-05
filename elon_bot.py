@@ -55,7 +55,7 @@ while True:
 
         if not feed or not feed.entries:
             print("❌ All sources failed")
-            time.sleep(120)
+            time.sleep(180)
             continue
 
         latest = feed.entries[0]
